@@ -9,6 +9,7 @@
 #include <iterator>
 #include <d2d1.h>
 #include <random>
+#include <fstream>
 
 #pragma comment(lib, "d2d1.lib")
 
@@ -134,7 +135,7 @@ namespace edit
 					max_lenght = other.max_lenght;
 					next_pos = other.next_pos;
 
-					mPtr = reinterpret_cast<T*>(calloc(max_lenght, sizof(T)));
+					mPtr = reinterpret_cast<T*>(calloc(max_lenght, sizeof(T)));
 					if (!mPtr)throw EXCEPTION(BAD_MEMORY);
 
 					for (size_t i = 0; i < next_pos; ++i)mPtr[i] = other.mPtr[i];
@@ -423,8 +424,137 @@ namespace edit
 			}
 		}
 
+		class iterator
+		{
+		private:
+			T* it_ptr{ nullptr };
+			T* container_base_ptr{ nullptr };
+			size_t container_size{ 0 };
 
+		public:
+			friend class BAG<T>;
 
+			using iterator_category = std::contiguous_iterator_tag;
+			using difference_type = std::ptrdiff_t;
+			using value_type = T;
+			using pointer = T*;
+			using reference = T&;
+
+			iterator(T* init_ptr, BAG<T>& current_container)
+			{
+				it_ptr = init_ptr;
+				container_base_ptr = current_container.mPtr;
+				container_size = current_container.next_pos;
+			}
+
+			pointer operator ->()
+			{
+				return it_ptr;
+			}
+			reference operator *()
+			{
+				return *it_ptr;
+			}
+
+			iterator& operator++ ()
+			{
+				if (it_ptr >= container_base_ptr + container_size)throw EXCEPTION(BAD_ITERATOR);
+
+				++it_ptr;
+
+				return (*this);
+			}
+			iterator operator++ (int)
+			{
+				iterator temp{ (*this) };
+
+				++(*this);
+
+				return temp;
+			}
+
+			iterator& operator-- ()
+			{
+				if (it_ptr < container_base_ptr)throw EXCEPTION(BAD_ITERATOR);
+
+				--it_ptr;
+
+				return (*this);
+			}
+			iterator operator-- (int)
+			{
+				iterator temp{ (*this) };
+
+				--(*this);
+
+				return temp;
+			}
+
+			iterator& operator+ (int step)
+			{
+				if (it_ptr >= container_base_ptr + container_size)throw EXCEPTION(BAD_ITERATOR);
+
+				it_ptr += step;
+
+				return (*this);
+			}
+			iterator& operator- (int step)
+			{
+				if (it_ptr < container_base_ptr)throw EXCEPTION(BAD_ITERATOR);
+
+				it_ptr -= step;
+
+				return (*this);
+			}
+
+			friend bool operator == (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr == other.it_ptr);
+			}
+			friend bool operator != (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr != other.it_ptr);
+			}
+			friend bool operator < (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr < other.it_ptr);
+			}
+			friend bool operator > (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr > other.it_ptr);
+			}
+			friend bool operator <= (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr <= other.it_ptr);
+			}
+			friend bool operator >= (const iterator& current, const iterator& other) 
+			{
+				return(current.it_ptr >= other.it_ptr);
+			}
+		};
+
+		iterator begin()
+		{
+			return iterator(mPtr, (*this));
+		}
+		iterator end()
+		{
+			return(mPtr + next_pos, (*this));
+		}
+
+		void erase(iterator which)
+		{
+			for (size_t i = 0; i < next_pos; ++i)
+			{
+				if (mPtr + i == which.it_ptr)
+				{
+					erase(i);
+					return;
+				}
+			}
+
+			throw EXCEPTION(BAD_ITERATOR);
+		}
 	};
 
 	class EDITSRV_API RANDIT
@@ -441,5 +571,13 @@ namespace edit
 		float operator()(float min, float max);
 	};
 
+	// FUNCTIONS **************************
 
+	int EDITSRV_API CodeChar(wchar_t symbol, int code);
+	wchar_t EDITSRV_API DecodeChar(int symbol, int code);
+
+	bool EDITSRV_API FileExist(const wchar_t* name);
+
+	size_t EDITSRV_API SaveFile(const wchar_t* name, BAG<wchar_t>& Bag, int code, bool append = true);
+	bool EDITSRV_API LoadFile(const wchar_t* name, BAG<wchar_t>& Bag);
 }

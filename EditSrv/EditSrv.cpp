@@ -66,3 +66,89 @@ float edit::RANDIT::operator()(float min, float max)
 }
 
 ////////////////////////////////////
+
+
+// FUNCTIONS **************************
+
+int edit::CodeChar(wchar_t symbol, int code)
+{
+	int coded{ static_cast<int>(symbol) };
+
+	coded += code;
+
+	return coded;
+}
+wchar_t edit::DecodeChar(int symbol, int code)
+{
+	symbol -= code;
+
+	return static_cast<wchar_t>(symbol);
+}
+bool edit::FileExist(const wchar_t* name)
+{
+	std::wifstream test{ name };
+
+	return test.good();
+}
+
+size_t edit::SaveFile(const wchar_t* name, BAG<wchar_t>& Bag, int code, bool append)
+{
+	size_t chars_saved = Bag.size();
+
+	if (Bag.empty())return chars_saved;
+
+	if (append)
+	{
+		std::wofstream save(name, std::ios::app);
+		
+		save << Bag.size() << std::endl;
+		save << code << std::endl;
+
+		for (size_t i = 0; i < Bag.size(); ++i)
+		{
+			int letter = CodeChar(Bag[i], code);
+			save << letter << std::endl;
+		}
+		save.close();
+	}
+	else
+	{
+		std::wofstream save(name);
+
+		save << Bag.size() << std::endl;
+		save << code << std::endl;
+
+		for (size_t i = 0; i < Bag.size(); ++i)
+		{
+			int letter = CodeChar(Bag[i], code);
+			save << letter << std::endl;
+		}
+		save.close();
+	}
+
+	return chars_saved;
+}
+bool edit::LoadFile(const wchar_t* name, BAG<wchar_t>& Bag)
+{
+	if (!FileExist(name))return false;
+
+	int bag_size{ 0 };
+	int code{ 0 };
+
+	std::wifstream load(name);
+
+	load >> bag_size;
+	load >> code;
+
+	Bag.clear();
+
+	for (size_t i = 0; i < bag_size; ++i)
+	{
+		int letter = 0;
+
+		load >> letter;
+		Bag.push_back(DecodeChar(letter, code));
+	}
+
+	return true;
+}
