@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="EditSrv/EditSrv.vcxproj" Id="bcba0099-7d98-4916-8045-eb2b58507462" />
+</Solution>
