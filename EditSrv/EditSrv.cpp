@@ -88,12 +88,15 @@ bool edit::FileExist(const wchar_t* name)
 {
 	std::wifstream test{ name };
 
-	return test.good();
+	bool is_valid = test.good();
+	test.close();
+
+	return is_valid;
 }
 
 size_t edit::SaveFile(const wchar_t* name, BAG<wchar_t>& Bag, int code, bool append)
 {
-	size_t chars_saved = Bag.size();
+	size_t chars_saved = 0;
 
 	if (Bag.empty())return chars_saved;
 
@@ -108,6 +111,8 @@ size_t edit::SaveFile(const wchar_t* name, BAG<wchar_t>& Bag, int code, bool app
 		{
 			int letter = CodeChar(Bag[i], code);
 			save << letter << std::endl;
+
+			++chars_saved;
 		}
 		save.close();
 	}
@@ -122,16 +127,18 @@ size_t edit::SaveFile(const wchar_t* name, BAG<wchar_t>& Bag, int code, bool app
 		{
 			int letter = CodeChar(Bag[i], code);
 			save << letter << std::endl;
+
+			++chars_saved;
 		}
 		save.close();
 	}
 
 	return chars_saved;
 }
-bool edit::LoadFile(const wchar_t* name, BAG<wchar_t>& Bag)
+bool edit::LoadFile(BAG<wchar_t>& Bag, const wchar_t* name)
 {
 	if (!FileExist(name))return false;
-
+	
 	int bag_size{ 0 };
 	int code{ 0 };
 
@@ -140,15 +147,15 @@ bool edit::LoadFile(const wchar_t* name, BAG<wchar_t>& Bag)
 	load >> bag_size;
 	load >> code;
 
-	Bag.clear();
-
 	for (size_t i = 0; i < bag_size; ++i)
 	{
 		int letter = 0;
 
 		load >> letter;
+
 		Bag.push_back(DecodeChar(letter, code));
 	}
-
+	load.close();
+	
 	return true;
 }
